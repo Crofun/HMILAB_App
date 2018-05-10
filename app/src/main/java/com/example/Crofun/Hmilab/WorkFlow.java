@@ -1,5 +1,6 @@
 package com.example.Crofun.Hmilab;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
@@ -14,8 +15,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -23,6 +26,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
@@ -45,6 +50,9 @@ public class WorkFlow extends BaseActivity {
     private static final int UART_PROFILE_DISCONNECTED = 21;
     private static final int STATE_OFF = 10;
     public final static String SaveRunner_Off = "SaveRunner_off";
+    private static final int MY_PERMISSION_REQUEST_COARSE_LOCATION = 16;
+    private static final int MY_PERMISSION_REQUEST_FINE_LOCATION = 17;
+    private static final int MY_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 15;
 
     private int mState = UART_PROFILE_DISCONNECTED;
     private UartService mService = null;
@@ -55,6 +63,10 @@ public class WorkFlow extends BaseActivity {
     private TextView mDeviceName;
     private FloatingActionButton mFloatingActionButton;
     private Toolbar mToolbar;
+    private NavigationView mNavigationView;
+    private Menu mUserInfoMenu;
+    private MenuItem[] mUser_info_Items = new MenuItem[3];
+    private MenuItem mUser_info_title;
 
     private RecyclerView mSendCardRecView;
     private SendCardAdapter mSendCardAdapter;
@@ -70,8 +82,6 @@ public class WorkFlow extends BaseActivity {
 
     public static int channelNumber = 4;
     public static boolean[] channelHasSendThread = {false, false, false, false};    //这个数组大小应该和通道数相同
-
-
 
 
     @Override
@@ -94,13 +104,45 @@ public class WorkFlow extends BaseActivity {
         String chnstr = sp.getString("channel_number", "4");
         channelNumber = Integer.parseInt(chnstr);
 
-
-        if (!(ContextCompat.checkSelfPermission(MyApplication.getContext(),android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED))
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
-        if (!(ContextCompat.checkSelfPermission(MyApplication.getContext(),android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED))
-            Log.d(TAG, "onCreate: no root");
+        //Ask for WRITE_EXTERNAL_STORAGE permission.
+        if (!(ContextCompat.checkSelfPermission(MyApplication.getContext(),android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+            Log.d(TAG, "onCreate: WRITE_EXTERNAL_STORAGE not permitted.");
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE);
+        }
         else
-            Log.d(TAG, "onCreate: root");
+            Log.d(TAG, "onCreate: WRITE_EXTERNAL_STORAGE permitted.");
+
+        //Ask for LOCATION permissions.
+        if ((ContextCompat.checkSelfPermission(MyApplication.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)) != PackageManager.PERMISSION_GRANTED)
+        {
+            if (!(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)))
+            {
+                Toast.makeText(this, "Location Permission Needed for Bluetooth Scan! Please Check App Settings.", Toast.LENGTH_LONG).show();
+            }
+            else
+            {
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_REQUEST_COARSE_LOCATION);
+            }
+        }
+
+        if ((ContextCompat.checkSelfPermission(MyApplication.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)) != PackageManager.PERMISSION_GRANTED)
+        {
+            if (!(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)))
+            {
+                Toast.makeText(this, "Location Permission Needed for Bluetooth Scan! Please Check App Settings.", Toast.LENGTH_LONG).show();
+            }
+            else
+            {
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_FINE_LOCATION);
+            }
+        }
+
+        //滑动菜单(NavigationView)部分
+        mUser_info_title = (MenuItem) findViewById(R.id.nav_User_info_title);
+        mUser_info_Items[0]= (MenuItem) findViewById(R.id.nav_User_info_a);
+        mUser_info_Items[1]= (MenuItem) findViewById(R.id.nav_User_info_b);
+        mUser_info_Items[2]= (MenuItem) findViewById(R.id.nav_User_info_c);
+
 
         // 一个奇怪的调试数据发送线程。
         // new Thread(new DataSource()).start();
@@ -109,6 +151,7 @@ public class WorkFlow extends BaseActivity {
         new Thread(new DataTransport()).start();
 
     }
+
 
     //悬浮按钮部分
     private void initFloatActionButton() {
@@ -240,6 +283,20 @@ public class WorkFlow extends BaseActivity {
         mMonitorCardRecView.setLayoutManager(new LinearLayoutManager(WorkFlow.this));
         mMonitorCardAdapter = new MonitorCardAdapter();
         mMonitorCardRecView.setAdapter(mMonitorCardAdapter);
+    }
+
+    //滑动菜单点击响应
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.nav_User_info_title:
+                for(int i=0; i<3; i++){
+                    mUser_info_Items[i].setVisible(false);
+                }
+                return true;
+            default :
+                return super.onContextItemSelected(item);
+        }
     }
 
     @Override
@@ -418,6 +475,44 @@ public class WorkFlow extends BaseActivity {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case MY_PERMISSION_REQUEST_COARSE_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Coarse_Location permitted!", Toast.LENGTH_SHORT);
+
+                } else {
+                    Toast.makeText(this, "Coarse_Location not permitted!", Toast.LENGTH_SHORT);
+                }
+            }
+            case MY_PERMISSION_REQUEST_FINE_LOCATION:{
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this,"Fine_Location permitted!", Toast.LENGTH_SHORT);
+
+                }
+                else{
+                    Toast.makeText(this,"Fine_Location not permitted!", Toast.LENGTH_SHORT);
+                }
+            }
+            case MY_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE:{
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this,"External_Storage permitted!", Toast.LENGTH_SHORT);
+
+                }
+                else{
+                    Toast.makeText(this,"External_Storage not permitted!", Toast.LENGTH_SHORT);
+                }
+            }
+        }
+
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
             switch (requestCode) {
@@ -467,6 +562,7 @@ public class WorkFlow extends BaseActivity {
         }
     }
 
+    //TODO
     public void SendData(){
 
     }
