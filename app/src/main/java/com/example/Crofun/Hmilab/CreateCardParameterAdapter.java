@@ -317,7 +317,9 @@ public class CreateCardParameterAdapter {
                 int per0 = mTurningTimeAdapter[0].getPermillage();
                 int per1 = mTurningTimeAdapter[1].getPermillage();
                 int per2 = mTurningTimeAdapter[2].getPermillage();
-                if (! mTurningTimeAdapter[0].setPermillage(per2 - per1)) {
+                double cmx = mMaxValue;
+                double cmn = mMinValue;
+                if (! mTurningTimeAdapter[0].setPermillage((int) Math.round((per2 - per1) * cmn / cmx))) {
                     Toast.makeText(mContext, "Failed to modify #1.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -328,7 +330,9 @@ public class CreateCardParameterAdapter {
                 int per0 = mTurningTimeAdapter[0].getPermillage();
                 int per1 = mTurningTimeAdapter[1].getPermillage();
                 int per2 = mTurningTimeAdapter[2].getPermillage();
-                if (! mTurningTimeAdapter[1].setPermillage(per2 - per0)) {
+                double cmx = mMaxValue;
+                double cmn = mMinValue;
+                if (! mTurningTimeAdapter[1].setPermillage((int) Math.round(per2 - per0 * cmx / cmn))) {
                     Toast.makeText(mContext, "Failed to modify #2.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -339,7 +343,9 @@ public class CreateCardParameterAdapter {
                 int per0 = mTurningTimeAdapter[0].getPermillage();
                 int per1 = mTurningTimeAdapter[1].getPermillage();
                 int per2 = mTurningTimeAdapter[2].getPermillage();
-                if (! mTurningTimeAdapter[2].setPermillage(per0 + per1)) {
+                double cmx = mMaxValue;
+                double cmn = mMinValue;
+                if (! mTurningTimeAdapter[2].setPermillage((int) Math.round(per0 * cmx / cmn + per1))) {
                     Toast.makeText(mContext, "Failed to modify #3.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -377,13 +383,18 @@ public class CreateCardParameterAdapter {
     }
 
     private void redrawPreviewChart() {
-        Log.d(TAG, "redrawPreviewChart");
+        LineChartData lcd = createLineChartData(getCC0(), getCC1(), getCC2(), getCC3(), getMaximun(), getMinimun());
+        mPreviewChart.setLineChartData(lcd);
+    }
+
+    public static LineChartData createLineChartData(double cc0, double cc1, double cc2, double cc3, double cmx, double cmn) {
+        Log.d(TAG, "createLineChartData(" + cc0 + ", " + cc1 + ", " + cc2 + ", " + cc3 + ", " + cmx + ", " + cmn + ")\n");
         List<Float> xValue = new ArrayList<>();
         //基本参数
         xValue.add(0f);
-        xValue.add((float) mTurningTimeAdapter[0].getPermillage());
-        xValue.add((float) mTurningTimeAdapter[1].getPermillage());
-        xValue.add((float) mTurningTimeAdapter[2].getPermillage());
+        xValue.add((float) (1000 * cc0 / (cc0 + cc1 + cc2 + cc3)));
+        xValue.add((float) (1000 * (cc0 + cc1) / (cc0 + cc1 + cc2 + cc3)));
+        xValue.add((float) (1000 * (cc0 + cc1 + cc2) / (cc0 + cc1 + cc2 + cc3)));
         xValue.add(1000f);
         float eps = 1e-6f;
         //线序列
@@ -391,12 +402,12 @@ public class CreateCardParameterAdapter {
         //生成主线
         List<PointValue> valueListMain = new ArrayList<>();
         valueListMain.add(new PointValue(xValue.get(0), 0.0f));
-        valueListMain.add(new PointValue(xValue.get(0) + eps, (float) getMaximun()));
-        valueListMain.add(new PointValue(xValue.get(1), (float) getMaximun()));
+        valueListMain.add(new PointValue(xValue.get(0) + eps, (float) cmx));
+        valueListMain.add(new PointValue(xValue.get(1), (float) cmx));
         valueListMain.add(new PointValue(xValue.get(1) + eps, 0.0f));
         valueListMain.add(new PointValue(xValue.get(2), 0.0f));
-        valueListMain.add(new PointValue(xValue.get(2) + eps, (float) getMinimun()));
-        valueListMain.add(new PointValue(xValue.get(3), (float) getMinimun()));
+        valueListMain.add(new PointValue(xValue.get(2) + eps, (float) cmn));
+        valueListMain.add(new PointValue(xValue.get(3), (float) cmn));
         valueListMain.add(new PointValue(xValue.get(3) + eps, 0.0f));
         valueListMain.add(new PointValue(xValue.get(4), 0.0f));
         Line lineMain = new Line(valueListMain);
@@ -435,8 +446,8 @@ public class CreateCardParameterAdapter {
         lineList.add(lineAxisX);
         //生成一条与y轴重合的卡位线，边缘扩充原长的20%
         List<PointValue> valueListRangeY = new ArrayList<>();
-        valueListRangeY.add(new PointValue(0, (float) (getMinimun() - 0.1 * (getMaximun() - getMinimun()))));
-        valueListRangeY.add(new PointValue(0, (float) (getMaximun() + 0.1 * (getMaximun() - getMinimun()))));
+        valueListRangeY.add(new PointValue(0, (float) (cmn - 0.1 * (cmx - cmn))));
+        valueListRangeY.add(new PointValue(0, (float) (cmx + 0.1 * (cmx - cmn))));
         Line lineRangeY = new Line(valueListRangeY);
         lineRangeY.setColor(R.color.ZanAxis);
         lineRangeY.setStrokeWidth(1);
@@ -465,7 +476,7 @@ public class CreateCardParameterAdapter {
         //新建一个可以传入的数据，填入数据
         LineChartData lineChartData = new LineChartData();
         lineChartData.setLines(lineList);
-        mPreviewChart.setLineChartData(lineChartData);
+        return lineChartData;
     }
 
     //获取频率
@@ -490,19 +501,25 @@ public class CreateCardParameterAdapter {
     }
     //获取cc0
     public double getCC0() {
-        return (mTurningTimeAdapter[0].getPermillage() - 0) * 0.001 * mPeriodValue;
+        //return (mTurningTimeAdapter[0].getPermillage() - 0) * 0.001 * mPeriodValue;
+        //Log.d(TAG, "getCC0: " + (mTurningTimeAdapter[0].getPermillage() - 0) * 0.001 * mPeriodValue + "  " + mTurningTimeAdapter[0].getAbsoluteValue());
+        return mTurningTimeAdapter[0].getAbsoluteValue();
     }
     //获取cc1
     public double getCC1() {
-        return (mTurningTimeAdapter[1].getPermillage() - mTurningTimeAdapter[0].getPermillage()) * 0.001 * mPeriodValue;
+        //return (mTurningTimeAdapter[1].getPermillage() - mTurningTimeAdapter[0].getPermillage()) * 0.001 * mPeriodValue;
+        //Log.d(TAG, "getCC1: " + (mTurningTimeAdapter[1].getPermillage() - mTurningTimeAdapter[0].getPermillage()) * 0.001 * mPeriodValue + "  " + (mTurningTimeAdapter[1].getAbsoluteValue() - mTurningTimeAdapter[0].getAbsoluteValue()));
+        return mTurningTimeAdapter[1].getAbsoluteValue() - mTurningTimeAdapter[0].getAbsoluteValue();
     }
     //获取cc2
     public double getCC2() {
-        return (mTurningTimeAdapter[2].getPermillage() - mTurningTimeAdapter[1].getPermillage()) * 0.001 * mPeriodValue;
+        //return (mTurningTimeAdapter[2].getPermillage() - mTurningTimeAdapter[1].getPermillage()) * 0.001 * mPeriodValue;
+        return mTurningTimeAdapter[2].getAbsoluteValue() - mTurningTimeAdapter[1].getAbsoluteValue();
     }
     //获取cc3
     public double getCC3() {
-        return (1000 - mTurningTimeAdapter[2].getPermillage()) * 0.001 * mPeriodValue;
+        //return (1000 - mTurningTimeAdapter[2].getPermillage()) * 0.001 * mPeriodValue;
+        return mPeriodValue - mTurningTimeAdapter[2].getAbsoluteValue();
     }
 
     //判断是否毛都没有

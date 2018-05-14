@@ -424,6 +424,7 @@ public class WorkFlow extends BaseActivity {
                     sendCardData.dac_high=intent.getDoubleExtra("cmx",-1);
                     sendCardData.dac_low=intent.getDoubleExtra("cmn",-1);
                     sendCardData.crp=intent.getIntExtra("crp",1);
+                    sendCardData.createLineChartData();
                 }
 
                 mSendCardAdapter.addOneCard(sendCardData);

@@ -146,6 +146,10 @@ public class CreateCardTurningTimeAdapter {
     public int getPermillage() {
         return mPermillage;
     }
+    //获取真实值
+    public double getAbsoluteValue() {
+        return mAbsoluteValue;
+    }
     //设置千分比
     public boolean setPermillage(int permillage) {
         if (mRangeCallBack.getMinimun() <= permillage && permillage <= mRangeCallBack.getMaximun()) {
