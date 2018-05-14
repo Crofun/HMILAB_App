@@ -30,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,6 +59,8 @@ public class WorkFlow extends BaseActivity {
     private UartService mService = null;
     private BluetoothDevice mDevice = null;
     private BluetoothAdapter mBtAdapter = null;
+    private View mConnectLayout;
+    private ImageButton mCloseConnectLayoutBtn;
     private ImageButton mConnectBtn;
     private TextView mConnectBtnHint;
     private TextView mDeviceName;
@@ -138,6 +141,28 @@ public class WorkFlow extends BaseActivity {
         }
 
         //滑动菜单(NavigationView)部分
+        mNavigationView = findViewById(R.id.work_flow_navi);
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Log.d(TAG, "mNavigationView.onNavigationItemSelected");
+                switch(item.getItemId()){
+                    case R.id.nav_bluetooth_reopen:
+                        Log.d(TAG, "mNavigationView: R.id.nav_bluetooth_reopen");
+                        mConnectLayout.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.nav_User_info_title:
+                        Log.d(TAG, "mNavigationView: R.id.nav_User_info_title");
+                        for(int i=0; i<3; i++){
+                            mUser_info_Items[i].setVisible(false);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
         mUser_info_title = (MenuItem) findViewById(R.id.nav_User_info_title);
         mUser_info_Items[0]= (MenuItem) findViewById(R.id.nav_User_info_a);
         mUser_info_Items[1]= (MenuItem) findViewById(R.id.nav_User_info_b);
@@ -238,6 +263,14 @@ public class WorkFlow extends BaseActivity {
 
     //蓝牙部分
     private void initBluetooth() {
+        mConnectLayout = findViewById(R.id.connect_layout);
+        mCloseConnectLayoutBtn = findViewById(R.id.close_connect_layout_btn);
+        mCloseConnectLayoutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mConnectLayout.setVisibility(View.GONE);
+            }
+        });
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
@@ -283,20 +316,6 @@ public class WorkFlow extends BaseActivity {
         mMonitorCardRecView.setLayoutManager(new LinearLayoutManager(WorkFlow.this));
         mMonitorCardAdapter = new MonitorCardAdapter();
         mMonitorCardRecView.setAdapter(mMonitorCardAdapter);
-    }
-
-    //滑动菜单点击响应
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch(item.getItemId()){
-            case R.id.nav_User_info_title:
-                for(int i=0; i<3; i++){
-                    mUser_info_Items[i].setVisible(false);
-                }
-                return true;
-            default :
-                return super.onContextItemSelected(item);
-        }
     }
 
     @Override

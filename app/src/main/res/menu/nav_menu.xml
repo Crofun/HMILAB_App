@@ -3,6 +3,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     >
 
+    <group
+        android:checkableBehavior="none"
+        >
+
+        <item
+            android:title="Bluetooth reopen"
+            android:id="@+id/nav_bluetooth_reopen"
+            />
+
+    </group>
 
 
     <group android:checkableBehavior="none"
