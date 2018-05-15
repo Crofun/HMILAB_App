@@ -31,6 +31,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,7 +68,16 @@ public class WorkFlow extends BaseActivity {
     private TextView mDeviceName;
     private FloatingActionButton mFloatingActionButton;
     private Toolbar mToolbar;
+
     private NavigationView mNavigationView;
+    private View mNavHeaderLayout;
+    private TextView mNavLoginHeaderText;
+    private CheckBox mNavLoginRemember;
+    private Button mNavLoginBtn;
+    private View mNavLoginInputView;
+    private EditText mNavLoginUserid;
+    private EditText mNavLoginPassword;
+
     private Menu mUserInfoMenu;
     private MenuItem[] mUser_info_Items = new MenuItem[3];
     private MenuItem mUser_info_title;
@@ -141,32 +152,7 @@ public class WorkFlow extends BaseActivity {
         }
 
         //滑动菜单(NavigationView)部分
-        mNavigationView = findViewById(R.id.work_flow_navi);
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Log.d(TAG, "mNavigationView.onNavigationItemSelected");
-                switch(item.getItemId()){
-                    case R.id.nav_bluetooth_reopen:
-                        Log.d(TAG, "mNavigationView: R.id.nav_bluetooth_reopen");
-                        mConnectLayout.setVisibility(View.VISIBLE);
-                        break;
-                    case R.id.nav_User_info_title:
-                        Log.d(TAG, "mNavigationView: R.id.nav_User_info_title");
-                        for(int i=0; i<3; i++){
-                            mUser_info_Items[i].setVisible(false);
-                        }
-                        break;
-                    default:
-                        return false;
-                }
-                return true;
-            }
-        });
-        mUser_info_title = (MenuItem) findViewById(R.id.nav_User_info_title);
-        mUser_info_Items[0]= (MenuItem) findViewById(R.id.nav_User_info_a);
-        mUser_info_Items[1]= (MenuItem) findViewById(R.id.nav_User_info_b);
-        mUser_info_Items[2]= (MenuItem) findViewById(R.id.nav_User_info_c);
+        initNavigation();
 
 
         // 一个奇怪的调试数据发送线程。
@@ -465,6 +451,71 @@ public class WorkFlow extends BaseActivity {
 
     private void initService() {
         LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, makeGattUpdateIntentFilter());
+    }
+
+    private void initNavigation() {
+        mNavigationView = findViewById(R.id.work_flow_navi);
+        //菜单里的按钮
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Log.d(TAG, "mNavigationView.onNavigationItemSelected");
+                switch (item.getItemId()) {
+                    case R.id.nav_bluetooth_reopen:
+                        Log.d(TAG, "mNavigationView: R.id.nav_bluetooth_reopen");
+                        mConnectLayout.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.nav_User_info_title:
+                        Log.d(TAG, "mNavigationView: R.id.nav_User_info_title");
+                        for (int i = 0; i < 3; i++) {
+                            mUser_info_Items[i].setVisible(false);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
+        mUser_info_title = (MenuItem) findViewById(R.id.nav_User_info_title);
+        mUser_info_Items[0] = (MenuItem) findViewById(R.id.nav_User_info_a);
+        mUser_info_Items[1] = (MenuItem) findViewById(R.id.nav_User_info_b);
+        mUser_info_Items[2] = (MenuItem) findViewById(R.id.nav_User_info_c);
+
+        //顶部的登陆模块
+        mNavHeaderLayout = mNavigationView.getHeaderView(0);
+        mNavLoginHeaderText = mNavHeaderLayout.findViewById(R.id.nav_login_header);
+        mNavLoginRemember = mNavHeaderLayout.findViewById(R.id.nav_login_remember);
+        mNavLoginBtn = mNavHeaderLayout.findViewById(R.id.nav_login_btn);
+        mNavLoginInputView = mNavHeaderLayout.findViewById(R.id.nav_login_input);
+        mNavLoginUserid = mNavHeaderLayout.findViewById(R.id.nav_login_userid);
+        mNavLoginPassword = mNavHeaderLayout.findViewById(R.id.nav_login_password);
+
+        //点击登陆按钮的事件
+        mNavLoginBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mNavLoginBtn.getText().toString().toLowerCase().equals("login")) {
+                    String username = mNavLoginUserid.getText().toString();
+                    String password = mNavLoginPassword.getText().toString();
+                    if (username.length() <= 1 || password.length() <= 1) {
+                        Toast.makeText(WorkFlow.this,"请输入正确的用户名和密码", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Toast.makeText(WorkFlow.this, "点击了登陆按钮", Toast.LENGTH_SHORT).show();
+                    mNavLoginHeaderText.setText("User name: " + username);
+                    mNavLoginBtn.setText("logout");
+                    mNavLoginInputView.setVisibility(View.GONE);
+                } else {
+                    Toast.makeText(WorkFlow.this, "点击了登出按钮", Toast.LENGTH_SHORT).show();
+                    mNavLoginHeaderText.setText("Please login!");
+                    mNavLoginBtn.setText("login");
+                    mNavLoginInputView.setVisibility(View.VISIBLE);
+                    mNavLoginUserid.setText("");
+                    mNavLoginPassword.setText("");
+                }
+            }
+        });
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
