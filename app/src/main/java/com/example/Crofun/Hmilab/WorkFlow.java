@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -77,6 +78,7 @@ public class WorkFlow extends BaseActivity {
     private View mNavLoginInputView;
     private EditText mNavLoginUserid;
     private EditText mNavLoginPassword;
+    private CheckBox mNavShowBluetooth;
 
     private Menu mUserInfoMenu;
     private MenuItem[] mUser_info_Items = new MenuItem[3];
@@ -255,6 +257,7 @@ public class WorkFlow extends BaseActivity {
             @Override
             public void onClick(View v) {
                 mConnectLayout.setVisibility(View.GONE);
+                mNavShowBluetooth.setChecked(false);
             }
         });
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -455,32 +458,6 @@ public class WorkFlow extends BaseActivity {
 
     private void initNavigation() {
         mNavigationView = findViewById(R.id.work_flow_navi);
-        //菜单里的按钮
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Log.d(TAG, "mNavigationView.onNavigationItemSelected");
-                switch (item.getItemId()) {
-                    case R.id.nav_bluetooth_reopen:
-                        Log.d(TAG, "mNavigationView: R.id.nav_bluetooth_reopen");
-                        mConnectLayout.setVisibility(View.VISIBLE);
-                        break;
-                    case R.id.nav_User_info_title:
-                        Log.d(TAG, "mNavigationView: R.id.nav_User_info_title");
-                        for (int i = 0; i < 3; i++) {
-                            mUser_info_Items[i].setVisible(false);
-                        }
-                        break;
-                    default:
-                        return false;
-                }
-                return true;
-            }
-        });
-        mUser_info_title = (MenuItem) findViewById(R.id.nav_User_info_title);
-        mUser_info_Items[0] = (MenuItem) findViewById(R.id.nav_User_info_a);
-        mUser_info_Items[1] = (MenuItem) findViewById(R.id.nav_User_info_b);
-        mUser_info_Items[2] = (MenuItem) findViewById(R.id.nav_User_info_c);
 
         //顶部的登陆模块
         mNavHeaderLayout = mNavigationView.getHeaderView(0);
@@ -551,6 +528,41 @@ public class WorkFlow extends BaseActivity {
                 }
             }
         });
+
+        //蓝牙控件开关
+        mNavShowBluetooth = mNavHeaderLayout.findViewById(R.id.nav_bluetooth_show);
+        mNavShowBluetooth.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mConnectLayout.setVisibility(View.VISIBLE);
+                } else {
+                    mConnectLayout.setVisibility(View.GONE);
+                }
+            }
+        });
+
+
+        //下面的菜单里的选项
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.nav_User_info_title:
+                        for (int i = 0; i < 3; i++) {
+                            mUser_info_Items[i].setVisible(false);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
+        mUser_info_title = (MenuItem) mNavigationView.getMenu().findItem(R.id.nav_User_info_title);
+        mUser_info_Items[0] = (MenuItem) mNavigationView.getMenu().findItem(R.id.nav_User_info_a);
+        mUser_info_Items[1] = (MenuItem) mNavigationView.getMenu().findItem(R.id.nav_User_info_b);
+        mUser_info_Items[2] = (MenuItem) mNavigationView.getMenu().findItem(R.id.nav_User_info_c);
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

@@ -84,7 +84,6 @@
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-
                 >
 
                 <LinearLayout
@@ -119,7 +118,6 @@
 
         </LinearLayout>
 
-
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/FloatingButton"
             android:layout_width="66dp"
@@ -129,7 +127,6 @@
             android:layout_marginRight="20dp"
             android:src="@drawable/plus"
             />
-
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/add_card_toolbar"
@@ -145,7 +142,6 @@
                 android:orientation="horizontal"
                 android:background="@color/ZanDeeperBackground"
                 >
-
 
                 <ImageView
                     android:id="@+id/add_save_card"
@@ -187,12 +183,9 @@
                     android:layout_margin="20dp"
                     />
 
-
             </LinearLayout>
 
-
         </android.support.v7.widget.Toolbar>
-
 
     </android.support.design.widget.CoordinatorLayout>
 
