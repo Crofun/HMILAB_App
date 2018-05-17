@@ -48,14 +48,27 @@
             android:layout_gravity="center_vertical"
             />
 
-        <Button
-            android:id="@+id/nav_login_btn"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="0dp"
-            android:text="login"
-            android:textSize="12sp"
-            />
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dp"
+            android:background="@color/ZanLight"
+            >
+
+            <TextView
+                android:id="@+id/nav_login_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
+                android:text="login"
+                android:textSize="20sp"
+                />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -81,7 +94,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="10dp"
-                android:text="User id:"
+                android:text="User name:"
                 android:textSize="16sp"
                 />
 
@@ -163,5 +176,11 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/ZanDeeperBlur"
+        />
 
 </LinearLayout>

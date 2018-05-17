@@ -73,7 +73,7 @@ public class WorkFlow extends BaseActivity {
     private View mNavHeaderLayout;
     private TextView mNavLoginHeaderText;
     private CheckBox mNavLoginRemember;
-    private Button mNavLoginBtn;
+    private TextView mNavLoginBtn;
     private View mNavLoginInputView;
     private EditText mNavLoginUserid;
     private EditText mNavLoginPassword;
