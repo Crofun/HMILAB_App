@@ -491,28 +491,63 @@ public class WorkFlow extends BaseActivity {
         mNavLoginUserid = mNavHeaderLayout.findViewById(R.id.nav_login_userid);
         mNavLoginPassword = mNavHeaderLayout.findViewById(R.id.nav_login_password);
 
+        //自动填入记住的用户名和密码
+        SharedPreferences remember = PreferenceManager.getDefaultSharedPreferences(this);
+        if (remember.getBoolean("remember", false)) {
+            mNavLoginRemember.setChecked(true);
+            mNavLoginUserid.setText(remember.getString("username", ""));
+            mNavLoginPassword.setText(remember.getString("password", ""));
+        }
+
         //点击登陆按钮的事件
         mNavLoginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mNavLoginBtn.getText().toString().toLowerCase().equals("login")) {
+                    //Toast.makeText(WorkFlow.this, "点击了登陆按钮", Toast.LENGTH_SHORT).show();
                     String username = mNavLoginUserid.getText().toString();
                     String password = mNavLoginPassword.getText().toString();
+
+                    //TODO 联网检查用户名和密码
                     if (username.length() <= 1 || password.length() <= 1) {
                         Toast.makeText(WorkFlow.this,"请输入正确的用户名和密码", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    Toast.makeText(WorkFlow.this, "点击了登陆按钮", Toast.LENGTH_SHORT).show();
+
+                    //登陆成功，记住用户名和密码 / 清除记住的用户名和密码
+                    SharedPreferences remember = PreferenceManager.getDefaultSharedPreferences(WorkFlow.this);
+                    if (mNavLoginRemember.isChecked()) {
+                        remember.edit()
+                                .putBoolean("remember", true)
+                                .putString("username", username)
+                                .putString("password", password)
+                                .apply();
+                    } else {
+                        remember.edit()
+                                .putBoolean("remember", false)
+                                .putString("username", "")
+                                .putString("password", "")
+                                .apply();
+                    }
+                    //登陆成功。更改界面上的东西
                     mNavLoginHeaderText.setText("User name: " + username);
                     mNavLoginBtn.setText("logout");
                     mNavLoginInputView.setVisibility(View.GONE);
                 } else {
-                    Toast.makeText(WorkFlow.this, "点击了登出按钮", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(WorkFlow.this, "点击了登出按钮", Toast.LENGTH_SHORT).show();
                     mNavLoginHeaderText.setText("Please login!");
                     mNavLoginBtn.setText("login");
                     mNavLoginInputView.setVisibility(View.VISIBLE);
-                    mNavLoginUserid.setText("");
-                    mNavLoginPassword.setText("");
+
+                    //退出登陆之后填入记住的用户名和密码
+                    SharedPreferences remember = PreferenceManager.getDefaultSharedPreferences(WorkFlow.this);
+                    if (remember.getBoolean("remember", false)) {
+                        mNavLoginUserid.setText(remember.getString("username", ""));
+                        mNavLoginPassword.setText(remember.getString("password", ""));
+                    } else {
+                        mNavLoginUserid.setText("");
+                        mNavLoginPassword.setText("");
+                    }
                 }
             }
         });
